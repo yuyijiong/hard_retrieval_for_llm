@@ -16,7 +16,7 @@ You should modify the code in ``test.py`` to choose different tasks or models.
 The tasks we provide are:
 ```python
 {
-    "simple":simple retrieval,
+"simple":simple retrieval,
 "multi_step":multi-step retrieval,
 "logic":logic based retrieval,
 "multi_match":multi-matching retrieval
