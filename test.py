@@ -5,6 +5,7 @@ from tqdm import tqdm
 import pathlib
 import tiktoken
 from openai import OpenAI
+from functools import partial
 
 encoding = tiktoken.encoding_for_model('gpt-4')
 
@@ -64,13 +65,16 @@ def run_generation(df, client, test_model_name, max_tokens, temperature):
 if __name__ == '__main__':
 
     # choose task and eval function
-    task="logic"
-    eval_df=METRIC_MAP[task]
+    task_type="logic" # "logic" "simple" "multi_match" "multi_step"
+    data_type="kv" # "resume","kv","v2k"
+    eval_df=partial(METRIC_MAP[task_type],task=data_type)
 
     # choose datasets to test
     df_path_list = [
         "./logic-based/data_kv/logic_kv_4.jsonl",
         "./logic-based/data_kv/logic_kv_10.jsonl"
+        "./logic-based/data_kv/logic_kv_100.jsonl"
+
     ]
 
     # choose model to test
@@ -79,12 +83,15 @@ if __name__ == '__main__':
     # use vllm server
     client = OpenAI(api_key="EMPTY", base_url="http://localhost:5000/v1")
 
+    # use openai server
+    # client = OpenAI(api_key="your_api_key", base_url="https://api.openai.com/v1")
+
     for df_path in df_path_list:
         df = pd.read_json(df_path, lines=True, dtype=False)
 
         df = run_generation(df, client, test_model_name, max_tokens=512, temperature=0.8)
 
-        df = eval_df(df, task="kv")
+        df = eval_df(df, task=data_type)
 
         save_path = "./generations_of_{}/".format(test_model_name) + df_path
         pathlib.Path(os.path.dirname(save_path)).mkdir(parents=True, exist_ok=True)
