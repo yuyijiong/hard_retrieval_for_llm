@@ -99,6 +99,21 @@ def eval_df_multi_match(df, task="kv"):
         else:
             return "Wrong selection", pred_list
 
+    def match_answer_1key(pred: str, ref: str):
+        ref = str(ref).strip()
+
+        # Find 10 consecutive numbers
+        pred_key = re.findall(r"\d{10,}", pred)
+
+        if not pred_key:
+            return False, None
+
+        pred_key = str(pred_key[-1].strip())
+        if pred_key == ref:
+            return True, pred_key
+        else:
+            return "Wrong selection", pred_key
+
     def match_student(pred: str, ref: list):
         if isinstance(ref, str):
             ref = [ref]
@@ -149,6 +164,9 @@ def eval_df_multi_match(df, task="kv"):
         # Determine accuracy
         df["correct"] = df.apply(lambda x: match_kv(x["answer"], x["gold_keys"])[0], axis=1)
         df["pred_keys"] = df.apply(lambda x: match_kv(x["answer"], x["gold_keys"])[1], axis=1)
+    elif task=="last_key":
+        # Determine accuracy
+        df["correct"],df["pred_keys"] = zip(*df.apply(lambda x: match_answer_1key(x["answer"], x["gold_keys"]), axis=1))
     else:
         # Determine accuracy
         df["correct"] = df.apply(lambda x: match_student(x["answer"], x["gold_keys"])[0], axis=1)
@@ -280,7 +298,7 @@ def eval_df_simple(df, task="kv"):
         else:
             return False, pred_key
 
-    if task == "kv":
+    if task == "kv" or task=="k2v":
         # Determine accuracy
         df["correct"] = df.apply(lambda x: match_kv(x["answer"], x["gold_values"])[0], axis=1)
         df["pred"] = df.apply(lambda x: match_kv(x["answer"], x["gold_values"])[1], axis=1)
